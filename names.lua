@@ -19,6 +19,17 @@ local function stopESP()
     connections = {}
 end
 
+-- Function to handle F8 key press
+local function OnKeyPress(input)
+    if input.KeyCode == Enum.KeyCode.F8 then
+        stopESP()
+        -- Add any additional cleanup or stop logic for other scripts here
+    end
+end
+
+-- Connect the input listener
+game:GetService("UserInputService").InputBegan:Connect(OnKeyPress)
+
 for i, v in pairs(game.Players:GetChildren()) do
     local Top = Drawing.new("Line")
     local Bottom = Drawing.new("Line")
@@ -126,7 +137,8 @@ game.Players.PlayerAdded:Connect(function(newplr)
                         Bottom.Color = Color3.fromRGB(0, 255, 0)
                         Right.Color = Color3.fromRGB(0, 255, 0)
                     else 
-                        Top.Color = Color3.fromRGB(255, 0, 0)
+                        Top.Color = Color3.fromRGB(255, 0
+                        0)
                         Left.Color = Color3.fromRGB(255, 0, 0)
                         Bottom.Color = Color3.fromRGB(255, 0, 0)
                         Right.Color = Color3.fromRGB(255, 0, 0)
@@ -157,22 +169,18 @@ game.Players.PlayerAdded:Connect(function(newplr)
     coroutine.wrap(ESP)()
 end)
 
--- Function to stop the ESP script
-local function stopESP()
-    for _, conn in ipairs(connections) do
-        conn:Disconnect()
-    end
-
-    -- Remove all drawn lines
-    for _, obj in ipairs(game.Workspace:GetChildren()) do
-        if obj:IsA("Line") then
-            obj:Remove()
-        end
-    end
-
-    -- Clear the connections table
-    connections = {}
+-- Function to stop all scripts
+local function stopAllScripts()
+    stopESP()
+    -- Add other scripts to stop here
 end
 
--- Example of stopping the script when needed
--- stopESP()
+-- Function to handle F8 key press
+local function OnKeyPress(input)
+    if input.KeyCode == Enum.KeyCode.F8 then
+        stopAllScripts()
+    end
+end
+
+-- Connect the input listener
+game:GetService("UserInputService").InputBegan:Connect(OnKeyPress)
