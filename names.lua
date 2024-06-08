@@ -1,78 +1,178 @@
-local c = workspace.CurrentCamera
-local ps = game:GetService("Players")
-local lp = ps.LocalPlayer
-local rs = game:GetService("RunService")
+local plr = game.Players.LocalPlayer
+local camera = game.Workspace.CurrentCamera
+local connections = {} -- Store connections to disconnect later
 
-local function esp(p,cr)
-	local h = cr:WaitForChild("Humanoid")
-	local hrp = cr:WaitForChild("Head")
+-- Function to clean up and stop the ESP script
+local function stopESP()
+    for _, conn in ipairs(connections) do
+        conn:Disconnect()
+    end
 
-	local text = Drawing.new("Text")
-	text.Visible = false
-	text.Center = true
-	text.Outline = false 
-	text.Font = 3
-	text.Size = 16.16
-	text.Color = Color3.new(170,170,170)
+    -- Remove all drawn lines
+    for _, obj in ipairs(game.Workspace:GetChildren()) do
+        if obj:IsA("Line") then
+            obj:Remove()
+        end
+    end
 
-	local conection
-	local conection2
-	local conection3
-
-	local function dc()
-		text.Visible = false
-		text:Remove()
-		if conection then
-			conection:Disconnect()
-			conection = nil 
-		end
-		if conection2 then
-			conection2:Disconnect()
-			conection2 = nil 
-		end
-		if conection3 then
-			conection3:Disconnect()
-			conection3 = nil 
-		end
-	end
-
-	conection2 = cr.AncestryChanged:Connect(function(_,parent)
-		if not parent then
-			dc()
-		end
-	end)
-
-	conection3 = h.HealthChanged:Connect(function(v)
-		if (v<=0) or (h:GetState() == Enum.HumanoidStateType.Dead) then
-			dc()
-		end
-	end)
-
-	conection = rs.RenderStepped:Connect(function()
-		local hrp_pos,hrp_onscreen = c:WorldToViewportPoint(hrp.Position)
-		if hrp_onscreen then
-			text.Position = Vector2.new(hrp_pos.X, hrp_pos.Y - 27)
-			text.Text = "[ "..p.Name.." ]"
-			text.Visible = true
-		else
-			text.Visible = false
-		end
-	end)
+    -- Clear the connections table
+    connections = {}
 end
 
-local function p_added(p)
-	if p.Character then
-		esp(p,p.Character)
-	end
-	p.CharacterAdded:Connect(function(cr)
-		esp(p,cr)
-	end)
+for i, v in pairs(game.Players:GetChildren()) do
+    local Top = Drawing.new("Line")
+    local Bottom = Drawing.new("Line")
+    local Left = Drawing.new("Line")
+    local Right = Drawing.new("Line")
+
+    function ESP()
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            if v.Character ~= nil and v.Character:FindFirstChild("HumanoidRootPart") ~= nil and v.Name ~= plr.Name and v.Character.Humanoid.Health > 0 then 
+                local ScreenPos, OnScreen = camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+                if OnScreen then
+                    local Scale = v.Character.Head.Size.Y/2
+                    local Size = Vector3.new(2, 3, 0) * (Scale * 2)
+                    local humpos = camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+                    local TL = camera:WorldToViewportPoint((v.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, Size.Y, 0)).p)
+                    local TR = camera:WorldToViewportPoint((v.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, Size.Y, 0)).p)
+                    local BL = camera:WorldToViewportPoint((v.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, -Size.Y, 0)).p)
+                    local BR = camera:WorldToViewportPoint((v.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, -Size.Y, 0)).p)
+
+                    Top.From = Vector2.new(TL.X, TL.Y)
+                    Top.To = Vector2.new(TR.X, TR.Y)
+
+                    Left.From = Vector2.new(TL.X, TL.Y)
+                    Left.To = Vector2.new(BL.X, BL.Y)
+
+                    Right.From = Vector2.new(TR.X, TR.Y)
+                    Right.To = Vector2.new(BR.X, BR.Y)
+
+                    Bottom.From = Vector2.new(BL.X, BL.Y)
+                    Bottom.To = Vector2.new(BR.X, BR.Y)
+
+                    if v.TeamColor == plr.TeamColor then
+                        Top.Color = Color3.fromRGB(0, 255, 0)
+                        Left.Color = Color3.fromRGB(0, 255, 0)
+                        Bottom.Color = Color3.fromRGB(0, 255, 0)
+                        Right.Color = Color3.fromRGB(0, 255, 0)
+                    else 
+                        Top.Color = Color3.fromRGB(255, 0, 0)
+                        Left.Color = Color3.fromRGB(255, 0, 0)
+                        Bottom.Color = Color3.fromRGB(255, 0, 0)
+                        Right.Color = Color3.fromRGB(255, 0, 0)
+                    end
+
+                    Top.Visible = true
+                    Left.Visible = true
+                    Bottom.Visible = true
+                    Right.Visible = true
+                else 
+                    Top.Visible = false
+                    Left.Visible = false
+                    Bottom.Visible = false
+                    Right.Visible = false
+                end
+            else 
+                Top.Visible = false
+                Left.Visible = false
+                Bottom.Visible = false
+                Right.Visible = false
+                if game.Players:FindFirstChild(v.Name) == nil then
+                    connection:Disconnect()
+                end
+            end
+        end)
+        table.insert(connections, connection) -- Store the connection to disconnect later
+    end
+    coroutine.wrap(ESP)()
 end
 
-for i,p in next, ps:GetPlayers() do 
-	if p ~= lp then
-		p_added(p)
-	end
+game.Players.PlayerAdded:Connect(function(newplr)
+    local Top = Drawing.new("Line")
+    local Bottom = Drawing.new("Line")
+    local Left = Drawing.new("Line")
+    local Right = Drawing.new("Line")
+
+    function ESP()
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            if newplr.Character ~= nil and newplr.Character:FindFirstChild("HumanoidRootPart") ~= nil and newplr.Name ~= plr.Name  and newplr.Character.Humanoid.Health > 0 then
+                local ScreenPos, OnScreen = camera:WorldToViewportPoint(newplr.Character.HumanoidRootPart.Position)
+                if OnScreen then
+                    local Scale = newplr.Character.Head.Size.Y/2
+                    local Size = Vector3.new(2, 3, 0) * (Scale * 2)
+                    local humpos = camera:WorldToViewportPoint(newplr.Character.HumanoidRootPart.Position)
+                    local TL = camera:WorldToViewportPoint((newplr.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, Size.Y, 0)).p)
+                    local TR = camera:WorldToViewportPoint((newplr.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, Size.Y, 0)).p)
+                    local BL = camera:WorldToViewportPoint((newplr.Character.HumanoidRootPart.CFrame * CFrame.new(Size.X, -Size.Y, 0)).p)
+                    local BR = camera:WorldToViewportPoint((newplr.Character.HumanoidRootPart.CFrame * CFrame.new(-Size.X, -Size.Y, 0)).p)
+
+                    Top.From = Vector2.new(TL.X, TL.Y)
+                    Top.To = Vector2.new(TR.X, TR.Y)
+
+                    Left.From = Vector2.new(TL.X, TL.Y)
+                    Left.To = Vector2.new(BL.X, BL.Y)
+
+                    Right.From = Vector2.new(TR.X, TR.Y)
+                    Right.To = Vector2.new(BR.X, BR.Y)
+
+                    Bottom.From = Vector2.new(BL.X, BL.Y)
+                    Bottom.To = Vector2.new(BR.X, BR.Y)
+
+                    if newplr.TeamColor == plr.TeamColor then
+                        Top.Color = Color3.fromRGB(0, 255, 0)
+                        Left.Color = Color3.fromRGB(0, 255, 0)
+                        Bottom.Color = Color3.fromRGB(0, 255, 0)
+                        Right.Color = Color3.fromRGB(0, 255, 0)
+                    else 
+                        Top.Color = Color3.fromRGB(255, 0, 0)
+                        Left.Color = Color3.fromRGB(255, 0, 0)
+                        Bottom.Color = Color3.fromRGB(255, 0, 0)
+                        Right.Color = Color3.fromRGB(255, 0, 0)
+                    end
+
+                    Top.Visible = true
+                    Left.Visible = true
+                    Bottom.Visible = true
+                    Right.Visible = true
+                else 
+                    Top.Visible = false
+                    Left.Visible = false
+                    Bottom.Visible = false
+                    Right.Visible = false
+                end
+            else 
+                Top.Visible = false
+                Left.Visible = false
+                Bottom.Visible = false
+                Right.Visible = false
+                if game.Players:FindFirstChild(newplr.Name) == nil then
+                    connection:Disconnect()
+                end
+            end
+        end)
+        table.insert(connections, connection) -- Store the connection to disconnect later
+    end
+    coroutine.wrap(ESP)()
+end)
+
+-- Function to stop the ESP script
+local function stopESP()
+    for _, conn in ipairs(connections) do
+        conn:Disconnect()
+    end
+
+    -- Remove all drawn lines
+    for _, obj in ipairs(game.Workspace:GetChildren()) do
+        if obj:IsA("Line") then
+            obj:Remove()
+        end
+    end
+
+    -- Clear the connections table
+    connections = {}
 end
 
-ps.PlayerAdded:Connect(p_added)
+-- Example of stopping the script when needed
+-- stopESP()
