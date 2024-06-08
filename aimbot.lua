@@ -36,7 +36,6 @@ Environment.Settings = {
     LockPart = "Head" -- Body part to lock on
 }
 
---// FOV Settings
 Environment.FOVSettings = {
     Enabled = true,
     Visible = true,
@@ -51,13 +50,7 @@ Environment.FOVSettings = {
 
 Environment.FOVCircle = Drawing.new("Circle")
 
---// Slider Callback
-local function SliderCallback(Value)
-    Environment.FOVSettings.Amount = Value
-end
-
 --// Functions
-
 local function CancelLock()
     Environment.Locked = nil
     if Animation then Animation:Cancel() end
@@ -133,8 +126,7 @@ local function Load()
                     end
                 end
 
-            Environment.FOVCircle.Color = Environment.FOVSettings.LockedColor
-
+                Environment.FOVCircle.Color = Environment.FOVSettings.LockedColor
             end
         end
     end)
@@ -165,4 +157,11 @@ local function Load()
                         end
                     else
                         Running = true
-                   
+                    end
+                end
+            end)
+        end
+    end)
+
+    ServiceConnections.InputEndedConnection = UserInputService.InputEnded:Connect(function(Input)
+        if not Typing
