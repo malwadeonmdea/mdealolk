@@ -2,7 +2,7 @@
 -- reuploaded so it will be still alive if removed
 getgenv().SilentAim = true -- true or false
 getgenv().AimLock = true -- true or false
-getgenv().Prediction = 0.165 -- Prediction of Silent Aim and AimLock
+getgenv().Prediction = 0.140 -- Prediction of Silent Aim and AimLock
 getgenv().AimLockKeybind = Enum.KeyCode.E -- Keybind for AIMLOCK (NOT SILENT AIM)
 
 -- // Dependencies
